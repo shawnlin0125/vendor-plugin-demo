@@ -15,13 +15,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate openapi.yaml exists
+      - name: Validate openapi.yaml
         run: |
           if [ ! -f openapi.yaml ]; then
             echo "ERROR: openapi.yaml not found!"
             exit 1
           fi
-          echo "openapi.yaml found ✓"
+          # Check required endpoints exist
+          for ep in "/health" "/" ; do
+            if grep -q "path: $ep" openapi.yaml; then
+              echo "✓ $ep endpoint found"
+            else
+              echo "ERROR: $ep endpoint missing from openapi.yaml"
+              exit 1
+            fi
+          done
+          echo "Contract lint passed ✓"
 
   # ── Step 2: Build smoke test ──
   build-smoke:
@@ -36,7 +45,6 @@ jobs:
           docker run -d --name plugin-test -e PORT=8080 -e PLUGIN_NAME=${{ env.PLUGIN_NAME }} -p 8080:8080 plugin-smoke
           sleep 3
           curl -sf http://localhost:8080/health | python -c "import sys,json; d=json.load(sys.stdin); assert d['status']=='ok', f'Bad status: {d}'; print('Health OK ✓')"
-          docker logs plugin-test 2>&1 | tail -5
           docker stop plugin-test && docker rm plugin-test
 
   # ── Step 3: Unit tests ──
@@ -52,6 +60,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest httpx pytest-cov
+          pip install "pytest>=8.0" "httpx>=0.28.0" "pytest-cov>=6.0" "pytest-asyncio>=0.24.0"
       - name: Run tests
         run: pytest tests/ -v --cov=app --cov-report=term-missing
