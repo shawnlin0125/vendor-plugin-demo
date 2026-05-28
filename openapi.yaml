@@ -1,8 +1,10 @@
 openapi: "3.1.0"
 info:
-  title: "Vendor Plugin — Contract v1"
-  version: "1.0.0"
-  description: "Minimal contract that every vendor plugin must satisfy."
+  title: "Vendor Plugin Demo — CatAPI"
+  version: "0.1.0"
+  description: |
+    Demo vendor plugin that proxies TheCatAPI.
+    Implements vendor-contract v1 + additional CatAPI endpoints.
 
 paths:
   /health:
@@ -20,10 +22,10 @@ paths:
   /:
     get:
       operationId: root
-      summary: "Root endpoint"
+      summary: "Plugin info"
       responses:
         "200":
-          description: "Plugin info"
+          description: "Plugin information"
           content:
             application/json:
               schema:
@@ -31,6 +33,72 @@ paths:
                 properties:
                   message:
                     type: string
+                  endpoints:
+                    type: object
+
+  /cat/breeds:
+    get:
+      operationId: listBreeds
+      summary: "List cat breeds"
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: "List of cat breeds"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  breeds:
+                    type: array
+        "502":
+          description: "External API unavailable"
+
+  /cat/breeds/{breed_id}:
+    get:
+      operationId: getBreed
+      summary: "Get breed by ID"
+      parameters:
+        - name: breed_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Breed details"
+        "404":
+          description: "Breed not found"
+
+  /cat/images:
+    get:
+      operationId: searchImages
+      summary: "Random cat images"
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 5
+      responses:
+        "200":
+          description: "List of cat images"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  images:
+                    type: array
 
 components:
   schemas:
