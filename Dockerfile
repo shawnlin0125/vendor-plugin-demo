@@ -1,22 +1,19 @@
-# ── Build Stage ──
-FROM python:3.12-slim AS builder
-
-WORKDIR /build
-COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
-
-# ── Runtime Stage ──
+# ── Single-stage build ──
 FROM python:3.12-slim
 
 # Create non-root user
 RUN groupadd -r plugin && useradd -r -g plugin plugin
 
 WORKDIR /app
-COPY --from=builder /root/.local /root/.local
+
+# Install dependencies (system-wide, accessible by all users)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY app/ .
 
-ENV PATH=/root/.local/bin:$PATH \
-    PYTHONDONTWRITEBYTECODE=1 \
+ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 EXPOSE 8080
