@@ -1,0 +1,47 @@
+openapi: "3.1.0"
+info:
+  title: "Vendor Plugin — Contract v1"
+  version: "1.0.0"
+  description: "Minimal contract that every vendor plugin must satisfy."
+
+paths:
+  /health:
+    get:
+      operationId: health
+      summary: "Health check"
+      responses:
+        "200":
+          description: "Plugin is healthy"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /:
+    get:
+      operationId: root
+      summary: "Root endpoint"
+      responses:
+        "200":
+          description: "Plugin info"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        plugin:
+          type: string
+        uptime_seconds:
+          type: integer
